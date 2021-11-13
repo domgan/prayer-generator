@@ -78,6 +78,10 @@ class GeneratorModel:
         self.model = None
         self.checkpoint_dir = Path('training_checkpoints')
 
+        self.BATCH_SIZE = 10
+        self.EPOCHS = 50
+        self.BUFFER_SIZE = 10000  # to shuffle in memory
+
     def build_model(self, embedding_dim=256, rnn_units=1024, batch_size=10):
         model = tf.keras.Sequential([
             tf.keras.layers.Embedding(self.vocab_size, embedding_dim,
@@ -105,11 +109,8 @@ class GeneratorModel:
         char_dataset = tf.data.Dataset.from_tensor_slices(self.data)
         sequences = char_dataset.batch(self.seq_length + 1, drop_remainder=True)
         dataset = sequences.map(self._split_input_target)
-        BATCH_SIZE = 10
-        EPOCHS = 30
-        BUFFER_SIZE = 10000  # to shuffle in memory
-        dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
-        model = self.build_model(self.vocab_size, batch_size=BATCH_SIZE)
+        dataset = dataset.shuffle(self.BUFFER_SIZE).batch(self.BATCH_SIZE, drop_remainder=True)
+        model = self.build_model(self.vocab_size, batch_size=self.BATCH_SIZE)
         # todo o co B?
         for input_example_batch, target_example_batch in dataset.take(1):
             example_batch_predictions = model(input_example_batch)
@@ -118,7 +119,7 @@ class GeneratorModel:
         model.compile(optimizer='adam', loss=self._loss)
         checkpoint_prefix = self.checkpoint_dir / "ckpt_{epoch}"
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_prefix, save_weights_only=True)
-        history = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
+        history = model.fit(dataset, epochs=self.EPOCHS, callbacks=[checkpoint_callback])
         self.model = model
         return history
 
