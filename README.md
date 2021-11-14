@@ -1,5 +1,8 @@
 # prayer-generator
 
+### Installation:
+`python3 -m pip install -r requirements.txt`
+
 ### Usage:
 ```
 usage: prayergenerator.py [-h] [--train] start_str [words_num] [temp]
